@@ -125,10 +125,25 @@ def parse_listing(text: str) -> dict:
         except ValueError:
             pass
 
-    mm = MAKE_MODEL_RE.search(text)
-    if mm:
-        d["make"] = mm.group(1)
-        d["model"] = mm.group(2)
+    # old version
+#    mm = MAKE_MODEL_RE.search(text)
+#    if mm:
+#        d["make"] = mm.group(1)
+#        d["model"] = mm.group(2)
+    
+    # NEW VERSION FOR MAKE AND MODEL
+mm = MAKE_MODEL_RE.search(text)
+if mm:
+    make = mm.group(1)
+    model = mm.group(2)
+
+    # reject common false positives
+    bad_words = {"Contact", "Information", "Please", "Call", "Email"}
+
+    if make not in bad_words and model not in bad_words:
+        d["make"] = make
+        d["model"] = model
+
 
     # mileage variants
     mi = None
@@ -148,6 +163,23 @@ def parse_listing(text: str) -> dict:
             except ValueError: mi = None
     if mi is not None:
         d["mileage"] = mi
+
+# transmission
+t = re.search(r"\b(automatic|manual)\b", text, re.I)
+if t:
+    d["transmission"] = t.group(1).lower()
+
+# fuel type
+f = re.search(r"\b(gas|gasoline|diesel|hybrid|electric)\b", text, re.I)
+if f:
+    fuel = f.group(1).lower()
+    if fuel == "gas":
+        fuel = "gasoline"
+    d["fuel_type"] = fuel
+
+# 4wd / awd detection
+if re.search(r"\b(4wd|awd|four[-\s]?wheel drive)\b", text, re.I):
+    d["is_4wd"] = True
 
     return d
 
