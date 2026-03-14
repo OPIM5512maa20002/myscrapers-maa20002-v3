@@ -40,6 +40,27 @@ PRICE_RE      = re.compile(r"\$\s?([0-9,]+)")
 YEAR_RE       = re.compile(r"\b(19|20)\d{2}\b")
 MAKE_MODEL_RE = re.compile(r"\b([A-Z][a-z]+)\s+([A-Z][A-Za-z0-9]+)")
 
+# --------------- MAKE/MODEL CONSTANTS ----------------------------
+VALID_MAKES = {
+    "Acura", "Alfa", "Aston", "Audi", "Bentley", "BMW", "Buick",
+    "Cadillac", "Chevrolet", "Chevy", "Chrysler", "Dodge", "Ferrari",
+    "Fiat", "Ford", "Genesis", "GMC", "Honda", "Hummer", "Hyundai",
+    "Infiniti", "Jaguar", "Jeep", "Kia", "Lamborghini", "Land",
+    "Lexus", "Lincoln", "Lotus", "Maserati", "Mazda", "McLaren",
+    "Mercedes", "Mercury", "Mini", "Mitsubishi", "Nissan", "Oldsmobile",
+    "Plymouth", "Pontiac", "Porsche", "Ram", "Rivian", "Rolls-Royce",
+    "Saab", "Saturn", "Scion", "Subaru", "Suzuki", "Tesla", "Toyota",
+    "Volkswagen", "VW", "Volvo"
+}
+
+MAKE_ALIASES = {
+    "Chevy": "Chevrolet",
+    "VW": "Volkswagen",
+    "Mercedes": "Mercedes-Benz",
+    "GMC": "GMC",
+    "BMW": "BMW",
+}
+
 # -------------------- HELPERS --------------------
 def _list_run_ids(bucket: str, scrapes_prefix: str) -> list[str]:
     """
@@ -131,15 +152,20 @@ def parse_listing(text: str) -> dict:
 #        d["make"] = mm.group(1)
 #        d["model"] = mm.group(2)
     
-    # improved make/model extraction
+    # improved make/model extraction using a valid make list
     bad_words = {"Contact", "Information", "Please", "Call", "Email"}
 
     matches = MAKE_MODEL_RE.findall(text)
     for make, model in matches:
-        if make not in bad_words and model not in bad_words:
-            d["make"] = make
-            d["model"] = model
-            break
+        if make in bad_words or model in bad_words:
+            continue
+        if make not in VALID_MAKES:
+            continue
+        make = MAKE_ALIASES.get(make, make)
+
+        d["make"] = make
+        d["model"] = model
+        break
 
     # mileage variants
     mi = None
