@@ -132,17 +132,14 @@ def parse_listing(text: str) -> dict:
 #        d["model"] = mm.group(2)
     
     # improved make/model extraction
-    mm = MAKE_MODEL_RE.search(text)
-    if mm:
-        make = mm.group(1)
-        model = mm.group(2)
+    bad_words = {"Contact", "Information", "Please", "Call", "Email"}
 
-        # reject common false positives
-        bad_words = {"Contact", "Information", "Please", "Call", "Email"}
-
+    matches = MAKE_MODEL_RE.findall(text)
+    for make, model in matches:
         if make not in bad_words and model not in bad_words:
             d["make"] = make
             d["model"] = model
+            break
 
     # mileage variants
     mi = None
