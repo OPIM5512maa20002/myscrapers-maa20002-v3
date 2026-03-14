@@ -131,58 +131,66 @@ def parse_listing(text: str) -> dict:
 #        d["make"] = mm.group(1)
 #        d["model"] = mm.group(2)
     
-    # NEW VERSION FOR MAKE AND MODEL
-mm = MAKE_MODEL_RE.search(text)
-if mm:
-    make = mm.group(1)
-    model = mm.group(2)
+    # improved make/model extraction
+    mm = MAKE_MODEL_RE.search(text)
+    if mm:
+        make = mm.group(1)
+        model = mm.group(2)
 
-    # reject common false positives
-    bad_words = {"Contact", "Information", "Please", "Call", "Email"}
+        # reject common false positives
+        bad_words = {"Contact", "Information", "Please", "Call", "Email"}
 
-    if make not in bad_words and model not in bad_words:
-        d["make"] = make
-        d["model"] = model
-
+        if make not in bad_words and model not in bad_words:
+            d["make"] = make
+            d["model"] = model
 
     # mileage variants
     mi = None
     m1 = re.search(r"(?:mileage|odometer)\s*[:\-]?\s*([\d,]+)", text, re.I)
     if m1:
-        try: mi = int(m1.group(1).replace(",", ""))
-        except ValueError: mi = None
+        try:
+            mi = int(m1.group(1).replace(",", ""))
+        except ValueError:
+            mi = None
+
     if mi is None:
         m2 = re.search(r"(\d+(?:\.\d+)?)\s*k\s*(?:mi|mile|miles)\b", text, re.I)
         if m2:
-            try: mi = int(float(m2.group(1)) * 1000)
-            except ValueError: mi = None
+            try:
+                mi = int(float(m2.group(1)) * 1000)
+            except ValueError:
+                mi = None
+
     if mi is None:
         m3 = re.search(r"(\d{1,3}(?:[,\d]{3})*)\s*(?:mi|mile|miles)\b", text, re.I)
         if m3:
-            try: mi = int(re.sub(r"[^\d]", "", m3.group(1)))
-            except ValueError: mi = None
+            try:
+                mi = int(re.sub(r"[^\d]", "", m3.group(1)))
+            except ValueError:
+                mi = None
+
     if mi is not None:
         d["mileage"] = mi
 
-# transmission
-t = re.search(r"\b(automatic|manual)\b", text, re.I)
-if t:
-    d["transmission"] = t.group(1).lower()
+    # transmission
+    t = re.search(r"\b(automatic|manual)\b", text, re.I)
+    if t:
+        d["transmission"] = t.group(1).lower()
 
-# fuel type
-f = re.search(r"\b(gas|gasoline|diesel|hybrid|electric)\b", text, re.I)
-if f:
-    fuel = f.group(1).lower()
-    if fuel == "gas":
-        fuel = "gasoline"
-    d["fuel_type"] = fuel
+    # fuel type
+    f = re.search(r"\b(gas|gasoline|diesel|hybrid|electric)\b", text, re.I)
+    if f:
+        fuel = f.group(1).lower()
+        if fuel == "gas":
+            fuel = "gasoline"
+        d["fuel_type"] = fuel
 
-# 4wd / awd detection
-if re.search(r"\b(4wd|awd|four[-\s]?wheel drive)\b", text, re.I):
-    d["is_4wd"] = True
+    # 4wd / awd detection
+    if re.search(r"\b(4wd|awd|four[-\s]?wheel drive)\b", text, re.I):
+        d["is_4wd"] = True
 
     return d
-
+    
 # -------------------- HTTP ENTRY --------------------
 def extract_http(request: Request):
     """
