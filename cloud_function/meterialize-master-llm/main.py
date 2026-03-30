@@ -104,6 +104,9 @@ def materialize_http(request: Request):
         run_ids = _list_run_ids(BUCKET_NAME, STRUCTURED_PREFIX)
         if not run_ids:
             return jsonify({"ok": False, "error": f"no runs found under {STRUCTURED_PREFIX}/"}), 200
+        
+        # only scan the most recent 30 run folders
+        run_ids = run_ids[-30:]
 
         latest_by_post: Dict[str, Dict] = {}
         for rid in run_ids:
