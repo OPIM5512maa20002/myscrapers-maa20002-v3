@@ -28,7 +28,7 @@ CSV_COLUMNS = [
     "post_id", "run_id", "scraped_at",
     "price", "year", "make", "model", "mileage",
     "transmission", "fuel_type", "is_4wd",
-    "source_txt"
+    "source_txt", "color"
 ]
 
 def _list_run_ids(bucket: str, structured_prefix: str) -> list[str]:
