@@ -28,7 +28,9 @@ CSV_COLUMNS = [
     "post_id", "run_id", "scraped_at",
     "price", "year", "make", "model", "mileage",
     "transmission", "fuel_type", "is_4wd",
-    "source_txt", "color"
+    "color",
+    "llm_provider", "llm_model", "llm_ts",
+    "source_txt"
 ]
 
 def _list_run_ids(bucket: str, structured_prefix: str) -> list[str]:
@@ -58,11 +60,6 @@ def _jsonl_records_for_run(bucket: str, structured_prefix: str, run_id: str):
         try:
             rec = json.loads(line)
             rec.setdefault("run_id", run_id)
-
-            # only keep records that contain at least one of the new v2 fields
-            if not any(k in rec for k in ["transmission", "fuel_type", "is_4wd"]):
-                continue
-
             yield rec
         except Exception:
             continue
