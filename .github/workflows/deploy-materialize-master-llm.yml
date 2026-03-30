@@ -5,7 +5,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'cloud_function/meterialize-master-llm/**'
+      - 'cloud_function/materialize-master-llm/**'
       - '.github/workflows/deploy-materialize-master-llm.yml'
 
 permissions:
@@ -16,7 +16,7 @@ env:
   PROJECT_ID: ${{ vars.PROJECT_ID }}
   REGION: ${{ vars.REGION }}
   FUNCTION_NAME: materialize-master-llm
-  FUNCTION_DIR: cloud_function/meterialize-master-llm
+  FUNCTION_DIR: cloud_function/materialize-master-llm
   ENTRY_POINT: materialize_http
   RUNTIME: python312
   BUCKET_NAME: ${{ vars.BUCKET_NAME }}
