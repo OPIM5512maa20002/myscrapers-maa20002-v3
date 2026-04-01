@@ -156,7 +156,9 @@ def _safe_int(x):
 # -------------------- VERTEX AI CALL --------------------
 def _vertex_extract_fields(raw_text: str) -> dict:
     """
-    Ask Gemini to return JSON with exactly: price, year, make, model, transmission, mileage.
+    Ask Gemini to return JSON with exactly:
+    price, year, make, model, color, transmission, mileage,
+    fuel_type, is_4wd, city, state, zip_code.
     """
     model = _get_vertex_model()
 
@@ -168,20 +170,35 @@ def _vertex_extract_fields(raw_text: str) -> dict:
             "year": {"type": "integer", "nullable": True},
             "make": {"type": "string", "nullable": True},
             "model": {"type": "string", "nullable": True},
+            "color": {"type": "string", "nullable": True},
             "transmission": {"type": "string", "nullable": True},
             "mileage": {"type": "integer", "nullable": True},
+            "fuel_type": {"type": "string", "nullable": True},
+            "is_4wd": {"type": "boolean", "nullable": True},
+            "city": {"type": "string", "nullable": True},
+            "state": {"type": "string", "nullable": True},
+            "zip_code": {"type": "string", "nullable": True},
         },
         "required": ["price", "year", "make", "model", "transmission", "mileage"]
     }
 
     # System instruction (will be prepended to the prompt)
     sys_instr = (
-        "Extract ONLY the following fields from the input text. "
-        "Return a strict JSON object that conforms to the provided schema. "
-        "If a value is not present, use null. "
-        "Rules: integers for price/year/mileage; price in USD; mileage in miles; "
-        "the transmission can be manual or automatic, or if not listed, write null."
-        "do not infer values not explicitly present; do not add extra keys."
+        "Extract ONLY the following fields from the input text and return a strict JSON object "
+        "that conforms to the provided schema. If a value is not present, use null. "
+        "Rules: "
+        "price must be an integer in USD; "
+        "year must be a 4-digit integer year; "
+        "mileage must be an integer in miles; "
+        "color should be the exterior vehicle color if present; "
+        "transmission should be values like automatic or manual; "
+        "fuel_type should be values like gasoline, diesel, hybrid, or electric; "
+        "is_4wd should be true only if AWD, 4WD, four wheel drive, or all wheel drive is explicitly mentioned; "
+        "city should be the listing city if present; "
+        "state should be the 2-letter state abbreviation if present; "
+        "zip_code should be the 5-digit ZIP code if present. "
+        "Do not infer values that are not explicitly present. "
+        "Do not add extra keys."
     )
 
     # FIX: Combine instruction and text into one prompt string (SDK compatibility)
@@ -224,6 +241,18 @@ def _vertex_extract_fields(raw_text: str) -> dict:
     parsed["price"] = _safe_int(parsed.get("price"))
     parsed["year"] = _safe_int(parsed.get("year"))
     parsed["mileage"] = _safe_int(parsed.get("mileage"))
+
+    def _norm_bool(x):
+        if x is None or x == "":
+            return None
+        if isinstance(x, bool):
+            return x
+        s = str(x).strip().lower()
+        if s in {"true", "yes", "1"}:
+            return True
+        if s in {"false", "no", "0"}:
+            return False
+        return None
     
     def _norm_str(s):
         if s is None: return None
@@ -232,6 +261,15 @@ def _vertex_extract_fields(raw_text: str) -> dict:
 
     parsed["make"] = _norm_str(parsed.get("make"))
     parsed["model"] = _norm_str(parsed.get("model"))
+    parsed["transmission"] = _norm_str(parsed.get("transmission"))
+    parsed["fuel_type"] = _norm_str(parsed.get("fuel_type"))
+    parsed["color"] = _norm_str(parsed.get("color"))
+    parsed["city"] = _norm_str(parsed.get("city"))
+    parsed["state"] = _norm_str(parsed.get("state"))
+    parsed["zip_code"] = _norm_str(parsed.get("zip_code"))
+    parsed["is_4wd"] = _norm_bool(parsed.get("is_4wd"))
+
+    return parsed
 
     return parsed
 
@@ -319,8 +357,14 @@ def llm_extract_http(request: Request):
                 "year": parsed.get("year"),
                 "make": parsed.get("make"),
                 "model": parsed.get("model"),
+                "color": parsed.get("color"),
                 "mileage": parsed.get("mileage"),
                 "transmission": parsed.get("transmission"),
+                "fuel_type": parsed.get("fuel_type"),
+                "is_4wd": parsed.get("is_4wd"),
+                "city": parsed.get("city"),
+                "state": parsed.get("state"),
+                "zip_code": parsed.get("zip_code"),
                 "llm_provider": "vertex",
                 "llm_model": LLM_MODEL,
                 "llm_ts": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
