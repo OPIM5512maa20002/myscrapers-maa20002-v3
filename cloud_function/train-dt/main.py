@@ -15,8 +15,8 @@ from sklearn.metrics import mean_absolute_error
 # ---- ENV ----
 PROJECT_ID     = os.getenv("PROJECT_ID", "")
 GCS_BUCKET     = os.getenv("GCS_BUCKET", "")
-DATA_KEY       = os.getenv("DATA_KEY", "structured/datasets/listings_master.csv") #Changed for midterm then changed back for baseline
-OUTPUT_PREFIX  = os.getenv("OUTPUT_PREFIX", "preds")            # e.g., "structured/preds" #Changed for midterm
+DATA_KEY       = os.getenv("DATA_KEY", "structured/datasets/listings_master_v2_llm.csv") #Changed for midterm
+OUTPUT_PREFIX  = os.getenv("OUTPUT_PREFIX", "preds_llm")            # e.g., "structured/preds" #Changed for midterm
 TIMEZONE       = os.getenv("TIMEZONE", "America/New_York")      # split by local day
 LOG_LEVEL      = os.getenv("LOG_LEVEL", "INFO")
 
