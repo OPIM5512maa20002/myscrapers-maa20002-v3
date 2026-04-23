@@ -1,0 +1,2 @@
+post_id,scraped_at,make,model,year,mileage,price,actual_price,pred_price
+7925910184,2026-04-23T04:00:33Z,BMW,X2,2018,79633.0,15500.0,15500.0,19148.0
